@@ -1,0 +1,332 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  #app {
+    max-width: 380px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .header { text-align: center; }
+  .header h1 {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+  }
+  .header p {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+  }
+  .panel {
+    border-radius: var(--border-radius-lg);
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    padding: 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    transition: background 0.4s ease, border-color 0.4s ease;
+  }
+  .panel.green  { background: #EAF3DE; border-color: #639922; }
+  .panel.yellow { background: #FAEEDA; border-color: #BA7517; }
+  .panel.red    { background: #FCEBEB; border-color: #A32D2D; }
+  .db-display {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .db-value {
+    font-size: 64px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    line-height: 1;
+    transition: color 0.4s;
+    font-variant-numeric: tabular-nums;
+    min-width: 3ch;
+    text-align: right;
+  }
+  .panel.green  .db-value { color: #3B6D11; }
+  .panel.yellow .db-value { color: #854F0B; }
+  .panel.red    .db-value { color: #A32D2D; }
+  .db-unit {
+    font-size: 22px;
+    color: var(--color-text-secondary);
+    font-weight: 400;
+    padding-bottom: 6px;
+  }
+  .panel.green  .db-unit { color: #3B6D11; }
+  .panel.yellow .db-unit { color: #854F0B; }
+  .panel.red    .db-unit { color: #A32D2D; }
+  .status-label {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 14px;
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-secondary);
+    color: var(--color-text-secondary);
+    transition: background 0.4s, color 0.4s;
+  }
+  .panel.green  .status-label { background: #C0DD97; color: #27500A; }
+  .panel.yellow .status-label { background: #FAC775; color: #633806; }
+  .panel.red    .status-label { background: #F7C1C1; color: #791F1F; }
+
+  .bar-container {
+    width: 100%;
+    height: 8px;
+    background: var(--color-background-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    background: #639922;
+    transition: width 0.15s ease, background 0.4s;
+  }
+  .panel.yellow .bar-fill { background: #BA7517; }
+  .panel.red    .bar-fill { background: #A32D2D; }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-secondary);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn.start { background: #EAF3DE; border-color: #639922; color: #27500A; }
+  .btn.stop  { background: #FCEBEB; border-color: #A32D2D; color: #791F1F; }
+
+  .legend {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  .legend-item {
+    flex: 1;
+    border-radius: var(--border-radius-md);
+    padding: 8px 6px;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .legend-item.g { background: #EAF3DE; color: #3B6D11; border: 0.5px solid #97C459; }
+  .legend-item.y { background: #FAEEDA; color: #854F0B; border: 0.5px solid #EF9F27; }
+  .legend-item.r { background: #FCEBEB; color: #A32D2D; border: 0.5px solid #F09595; }
+  .legend-item strong { display: block; font-size: 13px; font-weight: 500; }
+
+  .log-section { display: flex; flex-direction: column; gap: 8px; }
+  .log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .log-header span { font-size: 13px; color: var(--color-text-secondary); }
+  .log-header button {
+    font-size: 12px;
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: var(--border-radius-md);
+  }
+  .log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+  .log-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    border-left: 3px solid #639922;
+  }
+  .log-entry.y { border-left-color: #BA7517; }
+  .log-entry.r { border-left-color: #A32D2D; }
+  .log-entry .log-time { color: var(--color-text-secondary); font-size: 11px; }
+
+  .note {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    line-height: 1.5;
+    text-align: center;
+    padding: 0 4px;
+    border-top: 0.5px solid var(--color-border-tertiary);
+    padding-top: 1rem;
+  }
+  .note strong { font-weight: 500; }
+</style>
+
+<div id="app">
+  <h2 class="sr-only">Medidor de ruido ambiental para Cuenca, Ecuador</h2>
+
+  <div class="header">
+    <h1><i class="ti ti-wave-sine" aria-hidden="true"></i> Ruido Ambiental</h1>
+    <p>Cuenca, Ecuador — monitoreo ciudadano</p>
+  </div>
+
+  <div class="panel" id="panel">
+    <div class="db-display">
+      <span class="db-value" id="db-value">—</span>
+      <span class="db-unit">dB</span>
+    </div>
+    <span class="status-label" id="status-label">Sin medición</span>
+    <div class="bar-container">
+      <div class="bar-fill" id="bar-fill"></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item g"><strong>&lt; 55 dB</strong>Nivel bajo</div>
+    <div class="legend-item y"><strong>55–70 dB</strong>Moderado</div>
+    <div class="legend-item r"><strong>&gt; 70 dB</strong>Alto</div>
+  </div>
+
+  <button class="btn start" id="main-btn" onclick="toggleMedicion()">
+    <i class="ti ti-player-play" aria-hidden="true"></i> Iniciar medición
+  </button>
+
+  <div class="log-section" id="log-section" style="display:none;">
+    <div class="log-header">
+      <span><i class="ti ti-list" aria-hidden="true"></i> Lecturas registradas</span>
+      <button onclick="exportCSV()"><i class="ti ti-download" aria-hidden="true"></i> Exportar CSV</button>
+    </div>
+    <div class="log-list" id="log-list"></div>
+  </div>
+
+  <p class="note">
+    <strong>Nota educativa y referencial:</strong> Esta herramienta utiliza el micrófono de su dispositivo para estimar el nivel de ruido. Los resultados son aproximados y no equivalen a una medición con sonómetro de Clase 1 (ISO 1996). Use esta aplicación con fines educativos y de concienciación comunitaria únicamente.
+  </p>
+</div>
+
+<script>
+  let stream = null;
+  let audioCtx = null;
+  let analyser = null;
+  let source = null;
+  let rafId = null;
+  let midiendo = false;
+  let log = [];
+
+  function toggleMedicion() {
+    midiendo ? detener() : iniciar();
+  }
+
+  async function iniciar() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 2048;
+      source = audioCtx.createMediaStreamSource(stream);
+      source.connect(analyser);
+      midiendo = true;
+      document.getElementById('main-btn').className = 'btn stop';
+      document.getElementById('main-btn').innerHTML = '<i class="ti ti-player-stop" aria-hidden="true"></i> Detener medición';
+      document.getElementById('log-section').style.display = 'flex';
+      medir();
+    } catch(e) {
+      alert('No se pudo acceder al micrófono. Verifique los permisos del navegador.');
+    }
+  }
+
+  function detener() {
+    midiendo = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    if (source) source.disconnect();
+    if (audioCtx) audioCtx.close();
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = audioCtx = analyser = source = null;
+    document.getElementById('main-btn').className = 'btn start';
+    document.getElementById('main-btn').innerHTML = '<i class="ti ti-player-play" aria-hidden="true"></i> Iniciar medición';
+    document.getElementById('panel').className = 'panel';
+    document.getElementById('db-value').textContent = '—';
+    document.getElementById('status-label').textContent = 'Sin medición';
+    document.getElementById('bar-fill').style.width = '0%';
+  }
+
+  function medir() {
+    if (!midiendo) return;
+    const buf = new Float32Array(analyser.fftSize);
+    analyser.getFloatTimeDomainData(buf);
+    let rms = 0;
+    for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
+    rms = Math.sqrt(rms / buf.length);
+    const db = rms > 0 ? Math.round(20 * Math.log10(rms) + 93) : 0;
+    const clamped = Math.max(20, Math.min(db, 120));
+    actualizarUI(clamped);
+    rafId = requestAnimationFrame(medir);
+  }
+
+  let lastLogTime = 0;
+  function actualizarUI(db) {
+    const panel = document.getElementById('panel');
+    const val = document.getElementById('db-value');
+    const lbl = document.getElementById('status-label');
+    const bar = document.getElementById('bar-fill');
+
+    val.textContent = db;
+    const pct = ((db - 20) / (120 - 20) * 100).toFixed(1);
+    bar.style.width = pct + '%';
+
+    if (db < 55) {
+      panel.className = 'panel green';
+      lbl.textContent = 'Nivel bajo — aceptable';
+    } else if (db <= 70) {
+      panel.className = 'panel yellow';
+      lbl.textContent = 'Nivel moderado — precaución';
+    } else {
+      panel.className = 'panel red';
+      lbl.textContent = 'Nivel alto — exposición prolongada: riesgo';
+    }
+
+    const now = Date.now();
+    if (now - lastLogTime > 3000) {
+      lastLogTime = now;
+      const clase = db < 55 ? 'g' : db <= 70 ? 'y' : 'r';
+      const t = new Date().toLocaleTimeString('es-EC', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+      log.push({ db, t, clase });
+      if (log.length > 50) log.shift();
+      renderLog();
+    }
+  }
+
+  function renderLog() {
+    const list = document.getElementById('log-list');
+    list.innerHTML = [...log].reverse().map(e =>
+      `<div class="log-entry ${e.clase}"><span>${e.db} dB</span><span class="log-time">${e.t}</span></div>`
+    ).join('');
+  }
+
+  function exportCSV() {
+    if (!log.length) return;
+    const csv = 'Hora,Nivel_dB\n' + log.map(e => `${e.t},${e.db}`).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ruido_cuenca_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
